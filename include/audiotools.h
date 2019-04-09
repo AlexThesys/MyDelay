@@ -47,6 +47,7 @@ class ParamSmoothing {
     T a, b, currentValue;
     double sR;
     public:
+    ParamSmoothing() = default;
     ParamSmoothing(double _sampleRate,
                    double smoothingMS, T cval);
     T smoothParam(const T) noexcept;
@@ -80,6 +81,8 @@ inline double clamp4tan(double val)
     constexpr double maxVal = PI * 0.5 - 0.001;
     return (((val > 0.0) ? ((val < maxVal) ? val : maxVal) : 0.0));
 }
+
+
 
 }	// audio_tools
 

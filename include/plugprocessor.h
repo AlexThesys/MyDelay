@@ -75,8 +75,14 @@ public:
     void processAudio(FloatType* in, FloatType* out, int numSamples, int ch);
 
 protected:
-
-   std::unique_ptr<Delay> m_pDelay;
+    typedef struct
+    {
+       audio_tools::ParamSmoothing<double> dryWetSmoother;
+       audio_tools::ParamSmoothing<double> timeSmoother;
+       audio_tools::ParamSmoothing<double> feedbackSmoother;
+    } ParamSmoothers;
+    ParamSmoothers paramSmoothers;
+    std::unique_ptr<DelaySIMD> m_pDelay;
 
    //--------------------------
     Vst::ParamValue mDelayDryWet;

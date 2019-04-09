@@ -119,10 +119,21 @@ tresult PLUGIN_API PlugProcessor::setActive (TBool state)
     if (state) // Initialize
 	{
 		// Allocate Memory Here
-        m_pDelay = std::make_unique<Delay>(audio_tools::SAMPLE_RATE);
+        m_pDelay = std::make_unique<DelaySIMD>(audio_tools::SAMPLE_RATE);
         m_pDelay->setOffset(static_cast<const int>(mDelayTime));
         m_pDelay->setDryWet(static_cast<float>(mDelayDryWet));
         m_pDelay->setFeedback(static_cast<float>(mDelayFB));
+
+        paramSmoothers.dryWetSmoother = audio_tools::ParamSmoothing<double>(audio_tools::SAMPLE_RATE,
+                                                                           audio_tools::SMOOTHING,
+                                                                           mDelayDryWet);
+
+        paramSmoothers.timeSmoother = audio_tools::ParamSmoothing<double>(audio_tools::SAMPLE_RATE,
+                                                                           audio_tools::SMOOTHING,
+                                                                           mDelayTime);
+        paramSmoothers.feedbackSmoother = audio_tools::ParamSmoothing<double>(audio_tools::SAMPLE_RATE,
+                                                                           audio_tools::SMOOTHING,
+                                                                           mDelayFB);
 
         m_isSampleSize64 = (processSetup.symbolicSampleSize == Vst::kSample64);
         if (processSetup.symbolicSampleSize == Vst::kSample64) {
@@ -162,25 +173,28 @@ tresult PLUGIN_API PlugProcessor::process (Vst::ProcessData& data)
                     case MyDelayParams::kParamDelayDryWetID :
 						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
 						    kResultTrue)
-                            mDelayDryWet = audio_tools::scaleRange<double>(DelayConst::DELAY_DRY_WET_MAX,
+                            mDelayDryWet = paramSmoothers.dryWetSmoother.smoothParam(
+                                        audio_tools::scaleRange<double>(DelayConst::DELAY_DRY_WET_MAX,
                                                                       DelayConst::DELAY_DRY_WET_MIN,
-                                                                      value);
+                                                                      value));
                             m_pDelay->setDryWet(static_cast<float>(mDelayDryWet));
                         break;
                     case MyDelayParams::kParamDelayTimeID :
                         if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
                             kResultTrue)
-                            mDelayTime = audio_tools::scaleRange<double>(DelayConst::DELAY_TIME_MS_MAX,
+                            mDelayTime = paramSmoothers.timeSmoother.smoothParam(
+                                        audio_tools::scaleRange<double>(DelayConst::DELAY_TIME_MS_MAX,
                                                                       DelayConst::DELAY_TIME_MS_MIN,
-                                                                      value);
-                            m_pDelay->setOffset(static_cast<int>(mDelayTime));
+                                                                      value));
+                            m_pDelay->setOffset(mDelayTime);
                         break;
                     case MyDelayParams::kParamDelayFeedbackID :
                         if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
                             kResultTrue)
-                            mDelayFB = audio_tools::scaleRange<double>(DelayConst::DELAY_FEEDBACK_MAX,
+                            mDelayFB = paramSmoothers.feedbackSmoother.smoothParam(
+                                        audio_tools::scaleRange<double>(DelayConst::DELAY_FEEDBACK_MAX,
                                                                       DelayConst::DELAY_FEEDBACK_MIN,
-                                                                      value);
+                                                                      value));
                             m_pDelay->setFeedback(static_cast<float>(mDelayFB));
                         break;
                     case MyDelayParams::kBypassID :
