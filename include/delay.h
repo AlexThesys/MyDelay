@@ -101,9 +101,12 @@ class DelayFractional
     float extFB;
     size_t ms2samples(const double) noexcept;
     float linearInterp(float, float);
+    void updateIndices(const int) noexcept;
+    void calculateYn(const float, float&, const int) noexcept;
 public:
     DelayFractional(const double);
     void updateDelay(float*, const int) noexcept;
+    void updateDelayCrossFB(float*, const int) noexcept;
     void updateDelayExtFB(float*, const int) noexcept;
     void setOffset(const double) noexcept;
     void setDryWet(const float) noexcept;
@@ -158,6 +161,23 @@ inline void DelayFractional::flushDelayBuffers() noexcept
 inline float DelayFractional::linearInterp(float y0, float y1)
 {
     return (y0 *(1.0f - delayFraction) + (y1 * delayFraction));
+}
+
+inline void DelayFractional::updateIndices(const int ch) noexcept
+{
+    mReadIndex[ch] = ++mReadIndex[ch] & delay_buff_mask;
+    mWriteIndex[ch] = ++ mWriteIndex[ch] & delay_buff_mask;
+}
+
+inline void DelayFractional::calculateYn(const float xn, float& yn, const int ch) noexcept
+{
+    if (mWriteIndex[ch] == mReadIndex[ch]) {
+        const size_t readIndex1 = (mReadIndex[ch] - 1) & delay_buff_mask;
+        yn = linearInterp(delayBuffer[ch]->at(mReadIndex[ch]), delayBuffer[ch]->at(readIndex1));
+    }
+    else {
+        yn = xn;
+    }
 }
 #endif // DELAY_H
 

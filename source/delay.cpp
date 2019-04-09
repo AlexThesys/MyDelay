@@ -68,35 +68,31 @@ void DelayFractional::updateDelay(float* buffer, const int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
-    if (mWriteIndex[ch] == mReadIndex[ch]) {
-        const size_t readIndex1 = (mReadIndex[ch] - 1) & delay_buff_mask;
-        yn = linearInterp(delayBuffer[ch]->at(mReadIndex[ch]), delayBuffer[ch]->at(readIndex1));
-    }
-    else {
-        yn = xn;
-    }
+    calculateYn(xn, yn, ch);
     delayBuffer[ch]->at(mWriteIndex[ch]) = xn + yn * dCoeffs.mFb;
     *buffer = dCoeffs.mDry * xn + dCoeffs.mWet * yn;
 
-    mReadIndex[ch] = ++mReadIndex[ch] & delay_buff_mask;
-    mWriteIndex[ch] = ++ mWriteIndex[ch] & delay_buff_mask;
+    updateIndices(ch);
+}
+
+void DelayFractional::updateDelayCrossFB(float* buffer, const int ch) noexcept
+{
+    const float xn = *buffer;
+    float yn = 0.0f;
+    calculateYn(xn, yn, ch);
+    delayBuffer[ch ^ 0x1]->at(mWriteIndex[ch ^ 0x1]) = xn + yn * dCoeffs.mFb;
+    *buffer = dCoeffs.mDry * xn + dCoeffs.mWet * yn;
+
+    updateIndices(ch);
 }
 
 void DelayFractional::updateDelayExtFB(float* buffer, const int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
-    if (mWriteIndex[ch] == mReadIndex[ch]) {
-        const size_t readIndex1 = (mReadIndex[ch] - 1) & delay_buff_mask;
-        yn = linearInterp(delayBuffer[ch]->at(mReadIndex[ch]), delayBuffer[ch]->at(readIndex1));
-    }
-    else {
-        yn = xn;
-    }
+    calculateYn(xn, yn, ch);
     delayBuffer[ch]->at(mWriteIndex[ch]) = xn + extFB;
     *buffer = dCoeffs.mDry * xn + dCoeffs.mWet * yn;
 
-    mReadIndex[ch] = ++mReadIndex[ch] & delay_buff_mask;
-    mWriteIndex[ch] = ++ mWriteIndex[ch] & delay_buff_mask;
-
+    updateIndices(ch);
 }
