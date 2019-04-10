@@ -56,7 +56,7 @@ void DelaySIMD::updateDelayExtFB(float* buffer, const int ch) noexcept
 
 DelayFractional::DelayFractional(const double sr) : delayFraction(0.0), extFB(0.0f)
 {
-    delay_buff_size = static_cast<size_t>(sr*2.0);	// sr*2 = 2 sec
+    delay_buff_size = findNextPow2(static_cast<size_t>(sr*2.0));	// sr*2 = 2 sec
     delay_buff_mask = delay_buff_size - 1;
     delayBuffer[0] = std::make_unique<std::vector<float>>(delay_buff_size);
     delayBuffer[1] = std::make_unique<std::vector<float>>(delay_buff_size);
