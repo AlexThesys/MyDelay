@@ -53,8 +53,7 @@ void DelaySIMD::updateDelayExtFB(float* buffer, const int ch) noexcept
 
 // ------------------------------------------------------------------------------
 
-
-DelayFractional::DelayFractional(const double sr) : delayFraction(0.0), extFB(0.0f)
+DelayFractional::DelayFractional(double sr) : extFB(0.0f)
 {
     delay_buff_size = findNextPow2(static_cast<size_t>(sr*2.0));	// sr*2 = 2 sec
     delay_buff_mask = delay_buff_size - 1;
@@ -62,9 +61,10 @@ DelayFractional::DelayFractional(const double sr) : delayFraction(0.0), extFB(0.
     delayBuffer[1] = std::make_unique<std::vector<float>>(delay_buff_size);
     memset(&dCoeffs, 0, sizeof(DCoeffs));
     memset(mWriteIndex, 0, sizeof (size_t)*2);
+    memset(delayFraction, 0, sizeof (float)*2);
 }
 
-void DelayFractional::updateDelay(float* buffer, const int ch) noexcept
+void DelayFractional::updateDelay(float* buffer, int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
@@ -75,7 +75,7 @@ void DelayFractional::updateDelay(float* buffer, const int ch) noexcept
     updateIndices(ch);
 }
 
-void DelayFractional::updateDelayCrossFB(float* buffer, const int ch) noexcept
+void DelayFractional::updateDelayCrossFB(float* buffer, int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;
@@ -86,7 +86,7 @@ void DelayFractional::updateDelayCrossFB(float* buffer, const int ch) noexcept
     updateIndices(ch);
 }
 
-void DelayFractional::updateDelayExtFB(float* buffer, const int ch) noexcept
+void DelayFractional::updateDelayExtFB(float* buffer, int ch) noexcept
 {
     const float xn = *buffer;
     float yn = 0.0f;

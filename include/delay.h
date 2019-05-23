@@ -97,49 +97,48 @@ class DelayFractional
     DCoeffs dCoeffs;
     size_t mReadIndex[2], mWriteIndex[2];
     size_t delay_buff_size, delay_buff_mask;
-    float delayFraction;
+    float delayFraction[2];
     float extFB;
-    size_t ms2samples(const double) noexcept;
+    size_t ms2samples(double, float&) noexcept;
     template<typename Width>
     Width findNextPow2(Width v) const noexcept;
-    float linearInterp(float, float);
-    void updateIndices(const int) noexcept;
-    void calculateYn(const float, float&, const int) noexcept;
+    float linearInterp(float, float, float&);
+    void updateIndices(int) noexcept;
+    void calculateYn(float, float&, int) noexcept;
 public:
-    DelayFractional(const double);
-    void updateDelay(float*, const int) noexcept;
-    void updateDelayCrossFB(float*, const int) noexcept;
-    void updateDelayExtFB(float*, const int) noexcept;
-    void setOffset(const double) noexcept;
-    void setDryWet(const float) noexcept;
-    void setFeedback(const float) noexcept;
-    float& getDelayedSample(const int ch) const noexcept;
+    DelayFractional(double);
+    void updateDelay(float*, int) noexcept;
+    void updateDelayCrossFB(float*, int) noexcept;
+    void updateDelayExtFB(float*, int) noexcept;
+    void setOffset(double, int) noexcept;
+    void setDryWet(float) noexcept;
+    void setFeedback(float) noexcept;
+    float& getDelayedSample(int ch) const noexcept;
     void setExternalFB(float fb) noexcept;
     void flushDelayBuffers() noexcept;
 };
 
-inline void DelayFractional::setOffset(const double time) noexcept
+inline void DelayFractional::setOffset(double time, int ch) noexcept
 {
-    mReadIndex[0] = ((mWriteIndex[0] - ms2samples(time)) & delay_buff_mask);
-    mReadIndex[1] = ((mWriteIndex[1] - ms2samples(time)) & delay_buff_mask);
+    mReadIndex[ch] = ((mWriteIndex[ch] - ms2samples(time, delayFraction[ch])) & delay_buff_mask);
 }
 
-inline void DelayFractional::setDryWet(const float dw) noexcept
+inline void DelayFractional::setDryWet(float dw) noexcept
 {
     dCoeffs.mWet = dw;
     dCoeffs.mDry = 1.0f - dw;
 }
 
-inline void DelayFractional::setFeedback(const float fb) noexcept
+inline void DelayFractional::setFeedback(float fb) noexcept
 {
     dCoeffs.mFb = fb;
 }
 
-inline size_t DelayFractional::ms2samples(const double ms) noexcept
+inline size_t DelayFractional::ms2samples(double ms, float& dFraction) noexcept
 {
     const float delaySamples = static_cast<float>(audio_tools::SAMPLE_RATE * ms) / 1000.0f;
     const size_t delayIntegral = static_cast<size_t>(delaySamples);
-    delayFraction = delaySamples - static_cast<float>(delayIntegral);
+    dFraction = delaySamples - static_cast<float>(delayIntegral);
     return delayIntegral;
 }
 
@@ -154,7 +153,7 @@ Width DelayFractional::findNextPow2(Width v) const noexcept
     return v;
 }
 
-inline float& DelayFractional::getDelayedSample(const int ch) const noexcept
+inline float& DelayFractional::getDelayedSample(int ch) const noexcept
 {
     return delayBuffer[ch]->at(mReadIndex[ch]);
 }
@@ -170,22 +169,22 @@ inline void DelayFractional::flushDelayBuffers() noexcept
     memset(&delayBuffer[1], 0, sizeof (float) * delay_buff_size);
 }
 
-inline float DelayFractional::linearInterp(float y0, float y1)
+inline float DelayFractional::linearInterp(float y0, float y1, float& dFraction)
 {
-    return (y0 *(1.0f - delayFraction) + (y1 * delayFraction));
+    return (y0 *(1.0f - dFraction) + (y1 * dFraction));
 }
 
-inline void DelayFractional::updateIndices(const int ch) noexcept
+inline void DelayFractional::updateIndices(int ch) noexcept
 {
-    mReadIndex[ch] = ++mReadIndex[ch] & delay_buff_mask;
-    mWriteIndex[ch] = ++ mWriteIndex[ch] & delay_buff_mask;
+//    mReadIndex[ch] = (mReadIndex[ch] + 1) & delay_buff_mask;
+    mWriteIndex[ch] = (mWriteIndex[ch] + 1) & delay_buff_mask;
 }
 
-inline void DelayFractional::calculateYn(const float xn, float& yn, const int ch) noexcept
+inline void DelayFractional::calculateYn(float xn, float& yn, int ch) noexcept
 {
-    if (mWriteIndex[ch] == mReadIndex[ch]) {
+    if (mWriteIndex[ch] != mReadIndex[ch]) {
         const size_t readIndex1 = (mReadIndex[ch] - 1) & delay_buff_mask;
-        yn = linearInterp(delayBuffer[ch]->at(mReadIndex[ch]), delayBuffer[ch]->at(readIndex1));
+        yn = linearInterp(delayBuffer[ch]->at(mReadIndex[ch]), delayBuffer[ch]->at(readIndex1), delayFraction[ch]);
     }
     else {
         yn = xn;
