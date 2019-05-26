@@ -14,10 +14,10 @@ class DelaySIMD
     size_t mReadIndex[2], mWriteIndex[2];
     size_t delay_buff_size, delay_buff_mask;
     __m128 extFB;
-    size_t ms2samples(const int) const noexcept;
+    static size_t ms2samples(const int) noexcept;
     template<typename Width>
-    Width findNextPow2(Width v) const noexcept;
-    size_t multipleOfN(size_t, size_t);
+    static Width findNextPow2(Width v) noexcept;
+    static size_t multipleOfN(size_t, size_t);
 public:
     DelaySIMD(const double);
     void updateDelay(float*, const int) noexcept;
@@ -48,14 +48,14 @@ inline void DelaySIMD::setFeedback(const float fb) noexcept
     dCoeffs.mFb = _mm_set1_ps(fb);
 }
 
-inline size_t DelaySIMD::ms2samples(const int ms) const noexcept
+inline size_t DelaySIMD::ms2samples(const int ms) noexcept
 {
     float sr = static_cast<float>(audio_tools::SAMPLE_RATE) / 1000.0f;
     return static_cast<size_t>(static_cast<float>(ms) * sr);
 }
 
 template<typename Width>
-Width DelaySIMD::findNextPow2(Width v) const noexcept
+Width DelaySIMD::findNextPow2(Width v) noexcept
 {
     --v;
     for (uint32_t i = 1, maxShift = sizeof (Width) << 3; i <= maxShift; i = i << 1){
@@ -99,9 +99,9 @@ class DelayFractional
     size_t delay_buff_size, delay_buff_mask;
     float delayFraction[2];
     float extFB;
-    size_t ms2samples(double, float&) noexcept;
+    static size_t ms2samples(double, float&) noexcept;
     template<typename Width>
-    Width findNextPow2(Width v) const noexcept;
+    static Width findNextPow2(Width v) noexcept;
     float linearInterp(float, float, float&);
     void updateIndices(int) noexcept;
     void calculateYn(float, float&, int) noexcept;
@@ -143,7 +143,7 @@ inline size_t DelayFractional::ms2samples(double ms, float& dFraction) noexcept
 }
 
 template<typename Width>
-Width DelayFractional::findNextPow2(Width v) const noexcept
+Width DelayFractional::findNextPow2(Width v) noexcept
 {
     --v;
     for (uint32_t i = 1, maxShift = sizeof (Width) << 3; i <= maxShift; i = i << 1){
