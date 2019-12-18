@@ -15,8 +15,7 @@ void DelaySIMD::updateDelay(float* buffer, const int ch) noexcept
 {
     // y(n) = (1.0f-dryWet) * x(n) + dryWet*(x(n-D) + fb*y(n-D);
 
-    __m128* output = reinterpret_cast<__m128*>(buffer);
-    __m128 input = *output;
+    __m128 input = _mm_load_ps(buffer);
 
     __m128 delayed = _mm_load_ps(&(delayBuffer[ch]->at(mReadIndex[ch])));
     // code duplication vs branchless
@@ -26,7 +25,8 @@ void DelaySIMD::updateDelay(float* buffer, const int ch) noexcept
     // -------------------------------
     delayed = _mm_mul_ps(delayed, dCoeffs.mWet);
     input = _mm_mul_ps(input, dCoeffs.mDry);
-    *output = _mm_add_ps(delayed, input);
+    input = _mm_add_ps(delayed, input);
+    _mm_store_ps(buffer, input);
 
     mReadIndex[ch] = (mReadIndex[ch] + 4) & delay_buff_mask;
     mWriteIndex[ch] = (mWriteIndex[ch] + 4) & delay_buff_mask;
@@ -35,8 +35,7 @@ void DelaySIMD::updateDelay(float* buffer, const int ch) noexcept
 void DelaySIMD::updateDelayExtFB(float* buffer, const int ch) noexcept
 {
 
-    __m128* output = reinterpret_cast<__m128*>(buffer);
-    __m128 input = *output;
+    __m128 input = _mm_load_ps(buffer);
 
     __m128 delayed = _mm_load_ps(&(delayBuffer[ch]->at(mReadIndex[ch])));
     // code duplication vs branchless
@@ -45,7 +44,8 @@ void DelaySIMD::updateDelayExtFB(float* buffer, const int ch) noexcept
     // ----------------------------------
     delayed = _mm_mul_ps(delayed, dCoeffs.mWet);
     input = _mm_mul_ps(input, dCoeffs.mDry);
-    *output = _mm_add_ps(delayed, input);
+    input = _mm_add_ps(delayed, input);
+    _mm_store_ps(buffer, input);
 
     mReadIndex[ch] = (mReadIndex[ch] + 4) & delay_buff_mask;
     mWriteIndex[ch] = (mWriteIndex[ch] + 4) & delay_buff_mask;
