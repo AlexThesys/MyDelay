@@ -59,7 +59,7 @@ namespace DelayConst
     static constexpr double DELAY_TIME_MS_MIN = 0.0;
     static constexpr double DELAY_TIME_MS_MAX = 2000.0;
     static constexpr double DELAY_TIME_MS_DEFAULT = 80.0;
-    static constexpr double DELAY_FEEDBACK_MIN = -0.95;
+    static constexpr double DELAY_FEEDBACK_MIN = 0.0;
     static constexpr double DELAY_FEEDBACK_MAX = 0.95;
     static constexpr double DELAY_FEEDBACK_DEFAULT = 0.4;
 };
