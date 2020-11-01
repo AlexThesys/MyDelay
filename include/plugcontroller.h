@@ -39,12 +39,15 @@
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "public.sdk/samples/vst/common/logscale.h"
 #include "../include/plugids.h"
+#include "vstgui/plugin-bindings/vst3editor.h"
+
+#define VSTGUI_LIVE_EDITING 1
 
 namespace Steinberg {
 namespace MyDelay {
 
 //-----------------------------------------------------------------------------
-class PlugController : public Vst::EditController
+class PlugController : public Vst::EditController, public VSTGUI::VST3EditorDelegate
 {
 public:
 //------------------------------------------------------------------------
@@ -60,6 +63,7 @@ public:
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 
 	//---from EditController-----
+	IPlugView* PLUGIN_API createView(const char* name) SMTG_OVERRIDE;
     tresult PLUGIN_API setComponentState (IBStream* state) SMTG_OVERRIDE;
     //------------------------------------------------------
     tresult PLUGIN_API setParamNormalizedFromFile(Vst::ParamID tag, Vst::ParamValue value);

@@ -15,12 +15,12 @@ void DelaySIMD::updateDelay(float* buffer, const int ch) noexcept
 
     __m128 input = _mm_load_ps(buffer);
 
-    __m128 delayed = _mm_load_ps(&(delayBuffer[mReadIndex[ch]*(ch+1)]));
+    __m128 delayed = _mm_load_ps(&(delayBuffer[mReadIndex[ch] + (delay_buff_size * ch)]));
 
     __m128 xmm = _mm_load_ps(dCoeffs.mFb);
     __m128 yn = _mm_mul_ps(delayed, xmm);
     yn = _mm_add_ps(yn, input);
-    _mm_store_ps(&(delayBuffer[mWriteIndex[ch]*(ch+1)]), yn);
+    _mm_store_ps(&(delayBuffer[mWriteIndex[ch] + (delay_buff_size * ch)]), yn);
 
     xmm = _mm_load_ps(dCoeffs.mWet);
     delayed = _mm_mul_ps(delayed, xmm);

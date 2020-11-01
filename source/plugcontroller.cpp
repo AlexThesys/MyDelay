@@ -85,6 +85,17 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
     return kResultTrue;
 }
 
+IPlugView* PLUGIN_API PlugController::createView(const char* name)
+{
+    // someone wants my editor
+    if (name && strcmp(name, "editor") == 0)
+    {
+        auto* view = new VSTGUI::VST3Editor(this, "view", "plug.uidesc");
+        return view;
+    }
+    return nullptr;
+}
+
 //------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 {
