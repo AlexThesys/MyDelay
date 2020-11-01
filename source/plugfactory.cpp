@@ -34,7 +34,7 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "public.sdk/source/main/pluginfactoryvst3.h"
+#include "public.sdk/source/main/pluginfactory.h"
 
 #include "../include/plugcontroller.h"	// for createInstance
 #include "../include/plugprocessor.h"	// for createInstance
